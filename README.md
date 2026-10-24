@@ -520,7 +520,42 @@ Read and complete `model_card.md`:
 
 [**Model Card**](model_card.md)
 
-Write 1 to 2 paragraphs here about what you learned:
+### My engineering process
 
-- about how recommenders turn data into predictions
-- about where bias or unfairness could show up in systems like this
+I built this in small steps and checked each one before moving on. I started with a taste profile, then wrote the scoring rules in plain words (the "Algorithm Recipe"), then drew the data flow, and only then wrote `score_song`, `recommend_songs` and `load_songs`. After each step I ran the tests and the program. I also ran experiments that changed one thing at a time: a bigger catalog, a weight shift and a diversity rule. Writing the plan first made the code easy to write, and the experiments showed me what the code was really doing.
+
+### Biggest learning moment
+
+The "Gym Hero" problem. A loud pop song with an "intense" mood kept showing up for people who asked for happy pop. It matched the genre and the energy, and it missed only the mood. I had assumed a missed mood would be a big penalty, but energy was worth so many points that the mood miss barely mattered. That taught me that a recommender is a list of choices. I chose the weights, and the weights decide who gets good songs. A result can look wrong because of a number I picked, not because of a bug.
+
+### How AI tools helped, and when I double-checked them
+
+AI tools helped most with the repetitive and structural work: drafting the scoring code, turning my rules into a mermaid chart, writing tests, and keeping the README in sync with the code. They were also quick at running experiments and comparing before and after tables.
+
+I still had to check the work, and I found real mistakes:
+
+- **A wrong number in the docs.** The README said a song's score was "halved to 0.22". When I ran the code, the real score was 0.03.
+- **A wrong claim about weights.** A bias note said a small weight change would swap two songs. Measuring it showed it did not.
+- **A command that failed.** `python -m src.main` crashed with `ModuleNotFoundError` until I fixed the imports.
+- **A flowchart that did not match the code.** It was missing the "too narrow" warning, so I asked for a review and fixed it.
+- **Stale text.** The README still said "10-song catalog" after the catalog had grown.
+
+My rule now is simple. If a document states a number, I run the code and compare. I let the AI write the first draft, and I check the facts myself.
+
+### What surprised me about simple algorithms
+
+Adding a few weights together can feel like a real recommendation. Library Rain came first for the study listener and Storm Runner came first for the rock listener, and I nodded both times. The "Why" list helped a lot. When a result comes with reasons, it feels like the system understands me, even though it only adds up points. It also fails in a human-looking way. It handed a rock song to a pop listener and made sense of it on paper. That made me think about real apps. A list can look smart and still be quietly narrow.
+
+### Where bias shows up
+
+Hand-written genre families gave pop, rock and lofi listeners partial credit, but not hip hop, r&b or reggae listeners. Their lists averaged 0.43, against 0.75 for lofi. Nobody planned that. It came from my choices and from a catalog where most genres have only one or two songs. The system serves some tastes much better than others.
+
+### What I would try next
+
+- Add many more songs, especially in thin genres.
+- Make mood count for more, or take points away when the mood clearly does not match. That would fix Gym Hero.
+- Widen the genre families (hip hop with r&b, reggae with latin).
+- Let a listener have two tastes, like calm and intense, instead of one energy target.
+- Make short profiles score fairly by dividing each score by the best score that profile could get.
+- Learn from what people play and skip, not only from what they say they like.
+

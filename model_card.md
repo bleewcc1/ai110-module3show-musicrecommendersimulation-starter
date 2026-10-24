@@ -2,20 +2,18 @@
 
 ## 1. Model Name  
 
-Give your model a short, descriptive name.  
-Example: **VibeFinder 1.0**  
+**SoundMatch 1.0**
 
 ---
 
 ## 2. Intended Use  
 
-Describe what your recommender is designed to do and who it is for. 
+SoundMatch suggests five songs from a small catalog. It picks songs that fit a listener's taste.
 
-Prompts:  
-
-- What kind of recommendations does it generate  
-- What assumptions does it make about the user  
-- Is this for real users or classroom exploration  
+- **What it makes.** A top 5 list. Each song has a score and a list of reasons.
+- **What it assumes.** The listener can name one favorite genre, one favorite mood and one target energy. It also assumes the listener likes the same kind of music all the time.
+- **Who it is for.** This is a classroom project. It is for learning how recommenders work. It is not for real listeners.
+- **What it should not be used for.** Do not use it to run a real music app. The catalog is tiny and made up.
 
 ---
 
@@ -50,26 +48,23 @@ Think of the recommender as a judge at a talent show who has a short checklist a
 
 ## 4. Data  
 
-Describe the dataset the model uses.  
-
-Prompts:  
-
-- How many songs are in the catalog  
-- What genres or moods are represented  
-- Did you add or remove data  
-- Are there parts of musical taste missing in the dataset  
+- **Size.** The catalog has 40 songs. I started with 20 and added 20 more.
+- **Genres.** There are 17 genres. Lofi has 6 songs. Pop and rock have 5 each. Most other genres have 1 or 2.
+- **Moods.** There are 16 moods. Examples are happy, chill, intense, moody and nostalgic.
+- **What each song has.** A title, an artist, a genre and a mood. It also has energy, tempo, valence, danceability and acousticness.
+- **Where it came from.** The songs and artists are made up. I wrote the numbers by hand. They are not measured from real audio.
+- **What is missing.** There are no lyrics. There is no language, no release year and no popularity. There is no listening history. Many genres have only one or two songs. Some tastes, like reggae and latin, are barely covered.
 
 ---
 
 ## 5. Strengths  
 
-Where does your system seem to work well  
-
-Prompts:  
-
-- User types for which it gives reasonable results  
-- Any patterns you think your scoring captures correctly  
-- Cases where the recommendations matched your intuition  
+- **Different listeners get different songs.** Chill Lofi and Intense Rock share no songs in their top 5.
+- **The top picks feel right.** Library Rain is first for the study listener. Storm Runner is first for the rock listener. Sunrise City is first for both pop listeners.
+- **It explains itself.** Every song comes with reasons, like "genre match" or "energy 0.82 vs target 0.88". You can see why a song ranked where it did.
+- **It handles near matches.** Indie pop counts as close to pop. A "relaxed" song can reach a "chill" listener.
+- **It is hard to break.** It ignores extra spaces and capital letters. It rejects bad numbers like energy 1.5. It warns you when nothing fits well.
+- **The math is valid.** Weights add up to 1. Scores stay between 0 and 1.
 
 ---
 
@@ -160,23 +155,20 @@ The four everyday listeners give six pairs. For each one, here is what changed i
 
 ## 8. Future Work  
 
-Ideas for how you would improve the model next.  
-
-Prompts:  
-
-- Additional features or preferences  
-- Better ways to explain recommendations  
-- Improving diversity among the top results  
-- Handling more complex user tastes  
+- **Add more songs.** Most genres have only one or two. More songs would give better lists.
+- **Fix the Gym Hero problem.** Make mood count for more. Or take points away when the mood is clearly wrong.
+- **Widen the genre families.** Add groups for hip hop and r&b, reggae and latin, and classical and ambient.
+- **Allow two tastes.** Let a listener pick a calm target and an intense target. Or give a range.
+- **Make sparse profiles fair.** Divide each score by the best score that profile could get. Then short profiles are not scored lower.
+- **Explain better.** Say things like "You get this because it is lofi and calm". Skip the raw numbers.
+- **Learn from listening.** Use what people play and skip. Do not rely only on what they say they like.
+- **Keep the variety rule.** Try other ways to mix up the top 5.
 
 ---
 
 ## 9. Personal Reflection  
 
-A few sentences about your experience.  
-
-Prompts:  
-
-- What you learned about recommender systems  
-- Something unexpected or interesting you discovered  
-- How this changed the way you think about music recommendation apps  
+- **What I learned.** A recommender is mostly a list of choices. I chose the weights, the families and the penalty. Each choice shapes who gets good songs.
+- **What surprised me.** Failures were quiet. The system still returned a list even when it was wrong. Doubling the weight on energy also changed less than I expected.
+- **The Gym Hero lesson.** A loud pop song kept showing up for people who wanted happy pop. It matched the genre and the energy. It missed only the mood. That taught me a missing piece can be hidden by a big weight somewhere else.
+- **How I think about real apps now.** Real apps must have the same problems, only bigger. Popular genres get better lists. Thin genres get padding. I now look at what a list leaves out, not only what it shows.
