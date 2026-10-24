@@ -52,8 +52,9 @@ Think of the recommender as a judge at a talent show who has a short checklist a
 - **Genres.** There are 17 genres. Lofi has 6 songs. Pop and rock have 5 each. Most other genres have 1 or 2.
 - **Moods.** There are 16 moods. Examples are happy, chill, intense, moody and nostalgic.
 - **What each song has.** A title, an artist, a genre and a mood. It also has energy, tempo, valence, danceability and acousticness.
+- **Five extra attributes.** Popularity (0 to 100), release decade, detailed mood tags (like nostalgic, neon or gritty), language, and instrumentalness. A listener can ask for any of them. They only count when asked for.
 - **Where it came from.** The songs and artists are made up. I wrote the numbers by hand. They are not measured from real audio.
-- **What is missing.** There are no lyrics. There is no language, no release year and no popularity. There is no listening history. Many genres have only one or two songs. Some tastes, like reggae and latin, are barely covered.
+- **What is missing.** There are no lyrics and no listening history. Language is only a label, and popularity and decade are made up. Many genres have only one or two songs. Some tastes, like reggae and latin, are barely covered.
 
 ---
 
@@ -84,7 +85,7 @@ Other limitations:
 
 ## 7. Evaluation  
 
-I evaluated the recommender three ways: by checking the four everyday profiles against my own musical intuition, by stress-testing it with adversarial profiles, and by running controlled experiments that change one thing at a time. The 67 automated tests in `tests/` cover scoring, ranking, loading, the profiles, the adversarial cases and the diversity rule, and all of them pass.
+I evaluated the recommender three ways: by checking the four everyday profiles (plus a fifth that uses the new song attributes) against my own musical intuition, by stress-testing it with adversarial profiles, and by running controlled experiments that change one thing at a time. The 161 automated tests in `tests/` cover scoring, ranking, loading, the profiles, the adversarial cases and the diversity rule, and all of them pass.
 
 ### Profiles I tested
 
@@ -95,7 +96,7 @@ I evaluated the recommender three ways: by checking the four everyday profiles a
 
 ### Everyday profiles
 
-Run `python -m src.main` to see the top 5 for Chill Lofi, Intense Rock, High-Energy Pop and Pop Happy, each with its score and reasons.
+Run `python -m src.main` to see the top 5 for Chill Lofi, Intense Rock, High-Energy Pop and Pop Happy, each as a table with its score and the reasons behind it (add `--format detailed` for the older list layout).
 
 | Profile | Current #1 | Does it feel right? |
 |---|---|---|
@@ -112,7 +113,9 @@ Chill Lofi and Intense Rock share no songs in their top 5, so the system does te
 |---|---|---|
 | Bigger catalog | 20 to 40 songs | Intense Rock went from 3 genre or mood matches (two weak fallbacks scoring 0.22 and 0.20) to 9 matches, with no "too narrow" warning. Lists got more meaningful but the genre bias became more visible. |
 | Weight shift | Genre halved (0.28 to 0.14), energy doubled (0.28 to 0.56), rescaled to sum to 1 | Different, not clearly more accurate. The #1 pick did not change for any profile and one song entered or left three of the four top 5s. It helped Chill Lofi (Spacewalk Thoughts entered) and hurt Intense Rock (Bass Cathedral, an EDM song, entered). Math check: weights sum to 1.0 and all scores stay between 0.01 and 0.99. |
-| Diversity rule | At most 2 songs per genre and 2 per artist in a top 5 | More varied lists for a small cost: distinct genres rose by one in three profiles and the average score dropped by 0.01-0.04. It cannot help genres with few songs. |
+| Hard diversity cap | At most 2 songs per genre and 2 per artist in a top 5 | More varied lists for a small cost: distinct genres rose by one in three profiles and the average score dropped by 0.01-0.04. It cannot help genres with few songs. |
+| Diversity penalty (now the default) | A song loses 0.08 per earlier song of its genre and 0.12 per earlier song by its artist | Softer than the cap. Chill Lofi went from 2 genres and 3 artists to 4 and 5, and a repeated artist is pushed down instead of removed (Dancefloor Mirage fell from #2 to #5 in High-Energy Pop). The average score drops by 0.01-0.06. Scores stay between 0 and 1. |
+| Ranking modes | Four switchable modes (balanced, genre-first, mood-first, energy-focused) | The modes keep 3 to 5 of the default top 5 and agree on obvious winners like Sunrise City. Genre-first keeps a rock listener in the rock family, mood-first follows the feeling across genres, and mood-first drops Gym Hero from 8th to 9th for Pop Happy (score 0.29), while genre-first lifts it to 3rd. |
 | Bias audit | A profile for each genre, plus a sweep of target energies | 40 test profiles produced 40 different #1 songs, so no single song dominates. Hip hop and r&b listeners get weaker lists (average 0.43) than lofi listeners (0.75). Energy extremes lose at most 0.06 of the energy points. |
 
 ### Adversarial profiles
@@ -162,7 +165,8 @@ The four everyday listeners give six pairs. For each one, here is what changed i
 - **Make sparse profiles fair.** Divide each score by the best score that profile could get. Then short profiles are not scored lower.
 - **Explain better.** Say things like "You get this because it is lofi and calm". Skip the raw numbers.
 - **Learn from listening.** Use what people play and skip. Do not rely only on what they say they like.
-- **Keep the variety rule.** Try other ways to mix up the top 5.
+- **Tune the diversity penalty.** Try other penalty sizes, or penalize a whole genre family instead of one genre.
+- **Let the listener switch modes in an app.** Today the modes are a command-line flag. A real app could offer a slider between genre, mood and energy.
 
 ---
 

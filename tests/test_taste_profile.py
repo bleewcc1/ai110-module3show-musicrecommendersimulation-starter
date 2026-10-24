@@ -95,7 +95,7 @@ def test_all_profiles_are_distinct_and_have_required_keys():
     assert len(PROFILES) >= 3
     for prefs in PROFILES.values():
         assert {"favorite_genre", "favorite_mood", "target_energy"} <= prefs.keys()
-    assert len({tuple(sorted(p.items())) for p in PROFILES.values()}) == len(PROFILES)
+    assert len({repr(sorted(p.items())) for p in PROFILES.values()}) == len(PROFILES)
 
 
 def test_typo_lofi_profile_matches_clean_lofi_results():

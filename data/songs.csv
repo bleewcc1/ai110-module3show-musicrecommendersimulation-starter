@@ -1,41 +1,41 @@
-id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
-1,Sunrise City,Neon Echo,pop,happy,0.82,118,0.84,0.79,0.18
-2,Midnight Coding,LoRoom,lofi,chill,0.42,78,0.56,0.62,0.71
-3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.10
-4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.60,0.58,0.86
-5,Gym Hero,Max Pulse,pop,intense,0.93,132,0.77,0.88,0.05
-6,Spacewalk Thoughts,Orbit Bloom,ambient,chill,0.28,60,0.65,0.41,0.92
-7,Coffee Shop Stories,Slow Stereo,jazz,relaxed,0.37,90,0.71,0.54,0.89
-8,Night Drive Loop,Neon Echo,synthwave,moody,0.75,110,0.49,0.73,0.22
-9,Focus Flow,LoRoom,lofi,focused,0.40,80,0.59,0.60,0.78
-10,Rooftop Lights,Indigo Parade,indie pop,happy,0.76,124,0.81,0.82,0.35
-11,Concrete Anthem,Block Theory,hip hop,confident,0.78,92,0.62,0.85,0.12
-12,Moonlit Sonata,Elara Voss,classical,peaceful,0.18,66,0.45,0.22,0.97
-13,Dusty Back Road,Hank Willow,country,nostalgic,0.52,98,0.68,0.58,0.74
-14,Velvet Hours,Satin Rae,r&b,romantic,0.48,84,0.66,0.72,0.38
-15,Iron Cathedral,Black Ember,metal,aggressive,0.97,168,0.28,0.45,0.04
-16,Island Breeze,Sun Dial,reggae,laid-back,0.55,76,0.83,0.80,0.45
-17,Neon Pulse,Circuit Bloom,edm,euphoric,0.94,128,0.88,0.90,0.03
-18,Pine Smoke Lullaby,Wren and Moss,folk,melancholy,0.30,82,0.35,0.40,0.91
-19,Blue Monday Rain,Delta Smoke,blues,sorrowful,0.44,70,0.30,0.50,0.67
-20,Calle Sol,Los Faroles,latin,festive,0.86,104,0.92,0.91,0.28
-21,Thunder Alley,Rust Valley,rock,intense,0.89,148,0.52,0.60,0.12
-22,Broken Amplifier,Static Youth,rock,aggressive,0.94,160,0.40,0.55,0.08
-23,Highway Daydream,Desert Static,rock,happy,0.72,126,0.74,0.62,0.30
-24,Last Call Lullaby,Amber Lane,rock,melancholy,0.45,88,0.33,0.42,0.55
-25,Forged in Ash,Grave Anthem,metal,intense,0.96,172,0.25,0.40,0.05
-26,Velvet Static,Glass Harbor,pop,romantic,0.60,100,0.70,0.74,0.25
-27,Paper Hearts,Luna Fray,pop,melancholy,0.50,92,0.38,0.60,0.45
-28,Dancefloor Mirage,Neon Echo,pop,euphoric,0.90,126,0.86,0.89,0.08
-29,Rainy Window Tape,LoRoom,lofi,melancholy,0.32,70,0.42,0.55,0.80
-30,Study Hall Static,Paper Lanterns,lofi,focused,0.38,76,0.55,0.57,0.74
-31,Sleepy Vinyl,Slow Stereo,lofi,relaxed,0.30,68,0.58,0.52,0.83
-32,Midnight Blue Room,Satin Rae,jazz,moody,0.40,96,0.50,0.50,0.85
-33,Cathedral of Rain,Elara Voss,classical,melancholy,0.22,58,0.28,0.25,0.96
-34,Gravel Road Anthem,Hank Willow,country,happy,0.66,112,0.80,0.68,0.60
-35,Bass Cathedral,Circuit Bloom,edm,intense,0.97,140,0.62,0.82,0.02
-36,Chrome Skyline,Neon Echo,synthwave,nostalgic,0.68,104,0.55,0.70,0.20
-37,Block Party Sunday,Block Theory,hip hop,happy,0.82,98,0.85,0.90,0.15
-38,Sunset Dub,Sun Dial,reggae,relaxed,0.45,80,0.78,0.72,0.55
-39,Morning Porch Song,Wren and Moss,folk,peaceful,0.28,84,0.62,0.45,0.93
-40,Smoke and Whiskey,Delta Smoke,blues,melancholy,0.50,76,0.35,0.52,0.60
+id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness,popularity,release_decade,mood_tags,language,instrumentalness
+1,Sunrise City,Neon Echo,pop,happy,0.82,118,0.84,0.79,0.18,82,2020,uplifting;sunny;energetic,english,0.02
+2,Midnight Coding,LoRoom,lofi,chill,0.42,78,0.56,0.62,0.71,61,2020,dreamy;focused;late-night,instrumental,0.85
+3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.10,70,2010,powerful;driving;rebellious,english,0.05
+4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.60,0.58,0.86,55,2020,cozy;dreamy;rainy,instrumental,0.9
+5,Gym Hero,Max Pulse,pop,intense,0.93,132,0.77,0.88,0.05,88,2010,pumped;driving;energetic,english,0.02
+6,Spacewalk Thoughts,Orbit Bloom,ambient,chill,0.28,60,0.65,0.41,0.92,38,2010,dreamy;spacey;serene,instrumental,0.95
+7,Coffee Shop Stories,Slow Stereo,jazz,relaxed,0.37,90,0.71,0.54,0.89,47,1990,warm;cozy;smooth,english,0.55
+8,Night Drive Loop,Neon Echo,synthwave,moody,0.75,110,0.49,0.73,0.22,66,2010,nostalgic;neon;late-night,instrumental,0.8
+9,Focus Flow,LoRoom,lofi,focused,0.40,80,0.59,0.60,0.78,58,2020,focused;calm;late-night,instrumental,0.88
+10,Rooftop Lights,Indigo Parade,indie pop,happy,0.76,124,0.81,0.82,0.35,72,2010,uplifting;sunny;youthful,english,0.03
+11,Concrete Anthem,Block Theory,hip hop,confident,0.78,92,0.62,0.85,0.12,77,2010,confident;gritty;powerful,english,0.0
+12,Moonlit Sonata,Elara Voss,classical,peaceful,0.18,66,0.45,0.22,0.97,69,2000,serene;elegant;dreamy,instrumental,0.98
+13,Dusty Back Road,Hank Willow,country,nostalgic,0.52,98,0.68,0.58,0.74,58,2000,nostalgic;warm;storytelling,english,0.05
+14,Velvet Hours,Satin Rae,r&b,romantic,0.48,84,0.66,0.72,0.38,74,2010,romantic;smooth;sensual,english,0.04
+15,Iron Cathedral,Black Ember,metal,aggressive,0.97,168,0.28,0.45,0.04,52,2000,aggressive;dark;powerful,english,0.03
+16,Island Breeze,Sun Dial,reggae,laid-back,0.55,76,0.83,0.80,0.45,71,2000,sunny;laid-back;carefree,english,0.04
+17,Neon Pulse,Circuit Bloom,edm,euphoric,0.94,128,0.88,0.90,0.03,84,2020,euphoric;neon;energetic,english,0.3
+18,Pine Smoke Lullaby,Wren and Moss,folk,melancholy,0.30,82,0.35,0.40,0.91,33,2010,melancholy;intimate;storytelling,english,0.1
+19,Blue Monday Rain,Delta Smoke,blues,sorrowful,0.44,70,0.30,0.50,0.67,42,1970,sorrowful;gritty;soulful,english,0.1
+20,Calle Sol,Los Faroles,latin,festive,0.86,104,0.92,0.91,0.28,80,2020,festive;sunny;danceable,spanish,0.02
+21,Thunder Alley,Rust Valley,rock,intense,0.89,148,0.52,0.60,0.12,64,2000,powerful;driving;rebellious,english,0.05
+22,Broken Amplifier,Static Youth,rock,aggressive,0.94,160,0.40,0.55,0.08,49,1990,aggressive;gritty;rebellious,english,0.04
+23,Highway Daydream,Desert Static,rock,happy,0.72,126,0.74,0.62,0.30,60,1990,carefree;sunny;driving,english,0.06
+24,Last Call Lullaby,Amber Lane,rock,melancholy,0.45,88,0.33,0.42,0.55,36,1990,melancholy;intimate;late-night,english,0.08
+25,Forged in Ash,Grave Anthem,metal,intense,0.96,172,0.25,0.40,0.05,44,2010,aggressive;dark;powerful,english,0.06
+26,Velvet Static,Glass Harbor,pop,romantic,0.60,100,0.70,0.74,0.25,68,2020,romantic;dreamy;smooth,english,0.03
+27,Paper Hearts,Luna Fray,pop,melancholy,0.50,92,0.38,0.60,0.45,63,2020,melancholy;intimate;youthful,english,0.02
+28,Dancefloor Mirage,Neon Echo,pop,euphoric,0.90,126,0.86,0.89,0.08,86,2020,euphoric;neon;danceable,english,0.02
+29,Rainy Window Tape,LoRoom,lofi,melancholy,0.32,70,0.42,0.55,0.80,45,2020,melancholy;rainy;late-night,instrumental,0.87
+30,Study Hall Static,Paper Lanterns,lofi,focused,0.38,76,0.55,0.57,0.74,52,2020,focused;calm;cozy,instrumental,0.9
+31,Sleepy Vinyl,Slow Stereo,lofi,relaxed,0.30,68,0.58,0.52,0.83,50,2010,cozy;calm;dreamy,instrumental,0.89
+32,Midnight Blue Room,Satin Rae,jazz,moody,0.40,96,0.50,0.50,0.85,41,1960,smooth;late-night;intimate,instrumental,0.75
+33,Cathedral of Rain,Elara Voss,classical,melancholy,0.22,58,0.28,0.25,0.96,40,2000,melancholy;serene;rainy,instrumental,0.97
+34,Gravel Road Anthem,Hank Willow,country,happy,0.66,112,0.80,0.68,0.60,62,2010,carefree;sunny;storytelling,english,0.03
+35,Bass Cathedral,Circuit Bloom,edm,intense,0.97,140,0.62,0.82,0.02,73,2020,driving;dark;energetic,english,0.55
+36,Chrome Skyline,Neon Echo,synthwave,nostalgic,0.68,104,0.55,0.70,0.20,57,2010,nostalgic;neon;driving,instrumental,0.78
+37,Block Party Sunday,Block Theory,hip hop,happy,0.82,98,0.85,0.90,0.15,79,2010,uplifting;danceable;carefree,english,0.0
+38,Sunset Dub,Sun Dial,reggae,relaxed,0.45,80,0.78,0.72,0.55,59,2000,sunny;laid-back;calm,english,0.2
+39,Morning Porch Song,Wren and Moss,folk,peaceful,0.28,84,0.62,0.45,0.93,35,2010,serene;warm;intimate,english,0.25
+40,Smoke and Whiskey,Delta Smoke,blues,melancholy,0.50,76,0.35,0.52,0.60,46,1970,gritty;soulful;late-night,english,0.15
