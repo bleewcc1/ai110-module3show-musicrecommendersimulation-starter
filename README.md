@@ -17,7 +17,17 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Real-world recommenders like Spotify and YouTube Music combine two ideas. Collaborative filtering looks at what millions of other listeners played, skipped, saved, and repeated, and suggests songs that people with similar habits enjoyed. Content-based filtering looks at the songs themselves (genre, mood, tempo, energy, and so on) and finds ones similar to what you already like. Production systems blend these signals, add context such as time of day, and rank a huge catalog in stages. My version is a small content-based recommender, since it has no listening history from other users, only a 20-song catalog and one user's stated taste. It scores every song against the user's profile and prioritizes, in order: genre match, energy closeness, mood match, and acoustic fit. Energy is scored by how close a song is to the user's target, not by whether it is higher or lower, and songs that match neither genre nor mood are penalized. The scores are then sorted to pick the top results, each with a plain-language reason.
+Real-world recommenders like Spotify and YouTube Music combine two ideas. Collaborative filtering looks at what millions of other listeners played, skipped, saved, and repeated, and suggests songs that people with similar habits enjoyed. Content-based filtering looks at the songs themselves (genre, mood, tempo, energy, and so on) and finds ones similar to what you already like. Production systems blend these signals, add context such as time of day, and rank a huge catalog in stages.
+
+My version is a small content-based recommender. It has no listening history from other users, only a 20-song catalog and one user's stated taste, so it can only compare songs to a profile.
+
+**The plan**
+
+1. **Input:** a taste profile (favorite genre, favorite mood, target energy, whether the user likes acoustic music, plus optional tempo, valence and danceability targets) and the song catalog loaded from `data/songs.csv`.
+2. **Process:** loop over every song and give it a score from 0 to 1 by adding weighted points. Genre and energy count most (0.28 each), then mood (0.22), then acoustic fit (0.12), with small optional tempo, valence and danceability terms (0.04, 0.03, 0.03). Energy and the other numeric features are scored by how *close* a song is to the target, not by whether it is higher or lower. Related genres and moods earn half credit, and songs that match neither genre nor mood are halved.
+3. **Output:** sort by score, break ties by title, and return the top `k` (default 5), each with a plain-language reason built from its point contributions. If a profile matches too few songs, a warning says the profile may be too narrow.
+
+The data flow chart and the full scoring rules are below.
 
 ### Features used in the simulation
 
@@ -26,11 +36,11 @@ Real-world recommenders like Spotify and YouTube Music combine two ideas. Collab
 | Feature | Type | Used in scoring? |
 |---|---|---|
 | `id`, `title`, `artist` | int / str | No, identification and display only (`title` breaks ties) |
-| `genre` | str | Yes, exact match with the user's favorite genre (weight 0.30) |
-| `mood` | str | Yes, exact match with the user's favorite mood (weight 0.25) |
-| `energy` | float, 0-1 | Yes, Gaussian closeness to the user's target energy (weight 0.30) |
-| `acousticness` | float, 0-1 | Yes, rewarded if the user likes acoustic, otherwise the inverse (weight 0.15) |
-| `tempo_bpm`, `valence`, `danceability` | int / float | Loaded but not scored; `tempo_bpm` and `valence` are candidates for future experiments |
+| `genre` | str | Yes, exact match with the user's favorite genre (weight 0.28), half credit for a related genre |
+| `mood` | str | Yes, exact match with the user's favorite mood (weight 0.22), half credit for a related mood |
+| `energy` | float, 0-1 | Yes, Gaussian closeness to the user's target energy (weight 0.28) |
+| `acousticness` | float, 0-1 | Yes, rewarded if the user likes acoustic, otherwise the inverse (weight 0.12) |
+| `tempo_bpm`, `valence`, `danceability` | int / float | Yes, but only when the profile sets a target; small closeness terms (weights 0.04, 0.03, 0.03) |
 
 **`UserProfile`**
 
@@ -40,10 +50,60 @@ Real-world recommenders like Spotify and YouTube Music combine two ideas. Collab
 | `favorite_mood` | str | `Song.mood` |
 | `target_energy` | float, 0-1 | `Song.energy` |
 | `likes_acoustic` | bool | `Song.acousticness` |
+| `target_tempo`, `target_valence`, `target_danceability` | optional float | `Song.tempo_bpm`, `Song.valence`, `Song.danceability` |
+
+### Data Flow
+
+```mermaid
+flowchart TD
+    subgraph INPUT["Input"]
+        A["User taste profile (dict)<br/>favorite_genre, favorite_mood,<br/>target_energy, likes_acoustic,<br/>optional target_tempo / valence / danceability"]
+        W{"profile_coverage()<br/>below k?"}
+        X["main.py prints a<br/>too-narrow warning"]
+        A --> W
+        W -- yes --> X
+        B[("data/songs.csv")]
+        B --> C["load_songs()<br/>one dict per song, numbers converted"]
+    end
+
+    subgraph PROCESS["Process: the loop, one pass per song"]
+        D{"More songs<br/>to judge?"}
+        E["score_song(profile, song)"]
+        F["Genre: exact +0.28,<br/>related +0.14, otherwise 0"]
+        G["Mood: exact +0.22,<br/>related +0.11, otherwise 0"]
+        H["Energy closeness up to +0.28<br/>Acoustic fit up to +0.12<br/>Tempo / valence / danceability up to +0.04 / +0.03 / +0.03<br/>(each only if the profile sets it)"]
+        I{"Neither genre nor mood<br/>matched, exactly or as related?"}
+        J["Multiply score by 0.5<br/>reason: closest fit only"]
+        K["Store (song, score, explanation)"]
+        D -- yes --> E --> F --> G --> H --> I
+        I -- yes --> J --> K
+        I -- no --> K
+        K --> D
+    end
+
+    subgraph OUTPUT["Output: the ranking"]
+        L["Sort by score, highest first<br/>ties broken by title"]
+        M["Keep the top k (default 5)"]
+        N["Each result: (song, score, explanation)<br/>main.py prints title, score, reasons"]
+        L --> M --> N
+    end
+
+    A --> E
+    C --> D
+    C --> W
+    D -- no --> L
+```
 
 ### Algorithm Recipe
 
-Every song in the catalog is scored against the user's profile with the same rules, then the songs are ranked. The weights sum to 1.0, so a score always falls between 0 and 1.
+Every song in the catalog is scored against the user's profile with the same rules, then the songs are ranked. The weights sum to 1.0, so a score always falls between 0 and 1. This is the final version, and it is what `score_song()` in `src/recommender.py` implements.
+
+In one line:
+
+```
+score = genre (0.28) + mood (0.22) + energy (0.28) + acoustic (0.12) + tempo/valence/danceability (0.04 + 0.03 + 0.03)
+        then x 0.5 if neither genre nor mood matched, exactly or as a related label
+```
 
 #### Step 1: Score each feature (points)
 
@@ -87,15 +147,24 @@ total                                                0.73
 
 Under the earlier all-or-nothing rules this song scored 0.22. For comparison, "Library Rain" (lofi, chill) scores 0.98 and "Neon Pulse" (edm, euphoric, a poor fit) is penalized down to 0.03.
 
-Some prompts to answer:
+#### Expected biases
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+This is a hand-tuned system on a 20-song catalog, so I expect these biases and gaps:
 
-You can include a simple diagram or bullet list if helpful.
+- **It may over-prioritize genre and ignore great mood matches.** Genre is worth 0.28 against 0.22 for mood, so a song in the right genre with the wrong feel can outrank a song that fits the mood perfectly. In the Chill Lofi results, Focus Flow (lofi, only a related mood) scores 0.86 and beats Spacewalk Thoughts (ambient, an exact "chill" match) at 0.80. Someone who cares about mood more than genre is served worse than someone who cares about genre.
+- **Genres and moods outside my "families" get no leniency.** I wrote the families by hand. Hip hop, classical, r&b, reggae and latin have no related genre, and "moody", "confident" and "romantic" have no related mood. Fans of those get all-or-nothing matching while pop, rock and lofi fans get partial credit.
+- **The catalog favors some tastes.** There are 17 genres across 20 songs. Lofi has 3 songs and pop has 2, so those listeners get several exact matches. Most other genres have exactly one, so their lists are padded with penalized near-misses (Intense Rock only matches 3 songs for 5 slots).
+- **One favorite genre and one favorite mood.** A listener who likes both jazz and metal cannot be described, and the profile is stated, not learned, so it can be wrong or out of date.
+- **Fixed, subjective weights.** The numbers are my judgment, not learned from listener behavior. Moving 0.07 or more of weight from genre to mood (0.20 genre, 0.30 mood) swaps positions 3 and 4 of the Chill Lofi results; at 0.23 / 0.27 the two are within 0.01.
+- **Closeness assumes a single sweet spot.** A listener who enjoys both very calm and very intense music would be scored poorly by a single target energy.
+- **Tie-breaking is alphabetical.** When scores are exactly equal, songs earlier in the alphabet are shown first, which has nothing to do with quality.
+
+**Quick answers**
+
+- **What features does each `Song` use?** Genre, mood, energy and acousticness always; tempo, valence and danceability when the profile asks for them. `id`, `title` and `artist` are for display and tie-breaking only.
+- **What does the `UserProfile` store?** A favorite genre, favorite mood, target energy, an acoustic preference, and optional tempo, valence and danceability targets.
+- **How is a score computed?** Each song is scored against the profile with the same weighted rules in the Algorithm Recipe above, then halved if neither genre nor mood matches.
+- **How are songs chosen?** All songs are scored, sorted highest first, and the top `k` are returned.
 
 ---
 
@@ -163,13 +232,10 @@ Use this section to document the experiments you ran. For example:
 
 ## Limitations and Risks
 
-Summarize some limitations of your recommender.
-
-Examples:
-
-- It only works on a tiny catalog
-- It does not understand lyrics or language
-- It might over favor one genre or mood
+- It only works on a tiny catalog (20 songs), so many profiles run out of real matches.
+- It does not understand lyrics, language, artist similarity or listening history.
+- It can over-favor genre and the genres that have more songs in the catalog (see "Expected biases" above).
+- Genre and mood families are hand-written, so labels I did not group get no partial credit.
 
 You will go deeper on this in your model card.
 
