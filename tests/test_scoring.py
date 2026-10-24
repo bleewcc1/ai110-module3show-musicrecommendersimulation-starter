@@ -112,7 +112,7 @@ def test_recommend_songs_sorted_and_limited():
 
 def test_load_songs_converts_types():
     songs = load_songs("data/songs.csv")
-    assert len(songs) == 20
+    assert len(songs) == 40
     for song in songs:
         assert isinstance(song["id"], int)
         for field in ("title", "artist", "genre", "mood"):
@@ -211,3 +211,118 @@ def test_negative_k_is_rejected():
 
 def test_empty_catalog_returns_nothing():
     assert recommend_songs({"favorite_genre": "pop"}, [], k=5) == []
+
+
+# Adversarial / edge cases ----------------------------------------------
+
+import pytest
+
+from src.recommender import (
+    LOW_CONFIDENCE_SCORE,
+    confidence_warnings,
+    label_match,
+    MOOD_FAMILIES,
+    normalize_label,
+    validate_prefs,
+)
+
+
+def test_labels_ignore_case_and_edge_whitespace():
+    assert normalize_label(" Lofi ") == "lofi"
+    assert normalize_label("   ") is None
+    prefs = {"favorite_genre": " Lofi ", "favorite_mood": "CHILL", "target_energy": 0.4}
+    clean = {"favorite_genre": "lofi", "favorite_mood": "chill", "target_energy": 0.4}
+    song = make_song(genre="lofi", mood="chill")
+    assert score_song(prefs, song) == score_song(clean, song)
+
+
+def test_sad_is_related_to_melancholy_and_sorrowful():
+    assert label_match("sad", "melancholy", MOOD_FAMILIES) == "near"
+    assert label_match("sad", "sorrowful", MOOD_FAMILIES) == "near"
+    assert label_match("sad", "happy", MOOD_FAMILIES) == "none"
+
+
+@pytest.mark.parametrize("bad", [
+    {"target_energy": 1.5},
+    {"target_energy": -1.0},
+    {"target_energy": 0.5, "target_valence": 2},
+    {"target_energy": 0.5, "target_danceability": -0.1},
+    {"target_energy": 0.5, "target_tempo": 400},
+    {"target_energy": 0.5, "target_tempo": 0},
+])
+def test_out_of_range_targets_are_rejected(bad):
+    with pytest.raises(ValueError):
+        score_song(bad, make_song())
+    with pytest.raises(ValueError):
+        validate_prefs(bad)
+
+
+def test_boundary_targets_are_accepted():
+    validate_prefs({"target_energy": 0.0, "target_valence": 1.0, "target_tempo": 20})
+
+
+def test_missing_labels_do_not_crash_and_are_penalized():
+    score, _ = score_song({"favorite_genre": None, "favorite_mood": "", "target_energy": 0.8}, make_song())
+    assert 0 < score <= WEIGHTS["energy"] * NO_MATCH_PENALTY
+
+
+def test_sad_request_warns_when_top_pick_is_not_sad():
+    songs = load_songs("data/songs.csv")
+    prefs = {"favorite_genre": "pop", "favorite_mood": "sad", "target_energy": 0.9, "likes_acoustic": False}
+    results = recommend_songs(prefs, songs, k=5)
+    assert any("mood 'sad'" in w for w in confidence_warnings(prefs, songs, results))
+
+
+def test_unknown_labels_warn_about_zero_coverage_and_weak_score():
+    songs = load_songs("data/songs.csv")
+    prefs = {"favorite_genre": "polka", "favorite_mood": "zany", "target_energy": 0.5}
+    results = recommend_songs(prefs, songs, k=5)
+    warnings = confidence_warnings(prefs, songs, results)
+    assert results[0][1] < LOW_CONFIDENCE_SCORE
+    assert len(warnings) == 3
+
+
+def test_good_profile_has_no_warnings():
+    songs = load_songs("data/songs.csv")
+    prefs = {"favorite_genre": "lofi", "favorite_mood": "chill", "target_energy": 0.4, "likes_acoustic": True}
+    assert confidence_warnings(prefs, songs, recommend_songs(prefs, songs, k=5)) == []
+
+
+def _catalog():
+    return load_songs("data/songs.csv")
+
+
+def test_diversity_caps_limit_genre_and_artist_in_top_k():
+    prefs = {"favorite_genre": "lofi", "favorite_mood": "chill", "target_energy": 0.4}
+    plain = recommend_songs(prefs, _catalog(), k=5)
+    capped = recommend_songs(prefs, _catalog(), k=5, max_per_genre=2, max_per_artist=1)
+    assert sum(s["genre"] == "lofi" for s, _, _ in plain) > 2
+    assert sum(s["genre"] == "lofi" for s, _, _ in capped) <= 2
+    artists = [s["artist"] for s, _, _ in capped]
+    assert len(artists) == len(set(artists)) == 5
+
+
+def test_diversity_keeps_best_song_and_best_first_order():
+    prefs = {"favorite_genre": "rock", "favorite_mood": "intense", "target_energy": 0.92}
+    plain = recommend_songs(prefs, _catalog(), k=5)
+    capped = recommend_songs(prefs, _catalog(), k=5, max_per_genre=2)
+    assert capped[0][0]["title"] == plain[0][0]["title"]
+    scores = [score for _, score, _ in capped]
+    assert scores == sorted(scores, reverse=True)
+
+
+def test_diversity_backfills_when_caps_leave_too_few_songs():
+    songs = _catalog()[:3]  # pop, lofi, rock: cap of 1 per artist/genre still fits 3
+    assert len(recommend_songs({"favorite_genre": "pop", "favorite_mood": "happy", "target_energy": 0.8},
+                               songs, k=3, max_per_genre=1)) == 3
+    same_genre = [s for s in _catalog() if s["genre"] == "lofi"]
+    assert len(recommend_songs({"favorite_genre": "lofi", "favorite_mood": "chill", "target_energy": 0.4},
+                               same_genre, k=5, max_per_genre=1)) == 5
+
+
+def test_diversity_caps_default_off_and_validate():
+    prefs = {"favorite_genre": "lofi", "favorite_mood": "chill", "target_energy": 0.4}
+    assert recommend_songs(prefs, _catalog(), k=5) == recommend_songs(
+        prefs, _catalog(), k=5, max_per_genre=None, max_per_artist=None)
+    with pytest.raises(ValueError):
+        recommend_songs(prefs, _catalog(), max_per_genre=0)

@@ -1,5 +1,6 @@
 import csv
 import math
+from collections import Counter
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, asdict
 
@@ -35,12 +36,15 @@ class UserProfile:
     target_danceability: Optional[float] = None
 
 # Algorithm Recipe: weighted sum, gated when neither genre nor mood matches.
-# Weights sum to 1.0. The last three are optional: they only count when the profile
+# EXPERIMENT (weight shift): genre halved (0.28 -> 0.14), energy doubled (0.28 -> 0.56).
+# The raw values now sum to 1.28, so they are rescaled to sum to exactly 1.0, which keeps
+# every score in [0, 1]. The last three are optional: they only count when the profile
 # supplies a target_tempo / target_valence / target_danceability.
-WEIGHTS = {
-    "genre": 0.28, "mood": 0.22, "energy": 0.28, "acoustic": 0.12,
+_RAW_WEIGHTS = {
+    "genre": 0.14, "mood": 0.22, "energy": 0.56, "acoustic": 0.12,
     "tempo": 0.04, "valence": 0.03, "danceability": 0.03,
 }
+WEIGHTS = {name: value / sum(_RAW_WEIGHTS.values()) for name, value in _RAW_WEIGHTS.items()}
 NO_MATCH_PENALTY = 0.5
 # Fraction of the genre/mood weight earned by a related (not identical) genre or mood.
 NEAR_MATCH_CREDIT = 0.5
@@ -60,10 +64,16 @@ GENRE_FAMILIES = [
 ]
 MOOD_FAMILIES = [
     {"chill", "relaxed", "peaceful", "laid-back", "focused"},
-    {"intense", "aggressive"},
-    {"happy", "euphoric", "festive"},
-    {"melancholy", "sorrowful", "nostalgic"},
+    {"intense", "aggressive", "angry"},
+    {"happy", "euphoric", "festive", "upbeat"},
+    {"melancholy", "sorrowful", "nostalgic", "sad"},
 ]
+
+# Numeric targets must sit in these ranges; anything else is rejected, not silently scored.
+UNIT_RANGE_TARGETS = ("target_energy", "target_valence", "target_danceability")
+TEMPO_RANGE = (20.0, 300.0)
+# A best score under this means even the top pick is a weak fit for the profile.
+LOW_CONFIDENCE_SCORE = 0.4
 
 
 def closeness(target: float, value: float, sigma: float) -> float:
@@ -74,9 +84,31 @@ def closeness(target: float, value: float, sigma: float) -> float:
     return math.exp(-((value - target) ** 2) / (2 * sigma ** 2))
 
 
+def normalize_label(label: Optional[str]) -> Optional[str]:
+    """Trims and lower-cases a genre/mood so "Lofi " matches "lofi". Blank becomes None."""
+    if label is None:
+        return None
+    label = str(label).strip().lower()
+    return label or None
+
+
+def validate_prefs(user_prefs: Dict) -> None:
+    """Raises ValueError for numeric targets outside their valid range (None is allowed)."""
+    energy = user_prefs.get("target_energy", user_prefs.get("energy"))
+    values = {name: user_prefs.get(name) for name in UNIT_RANGE_TARGETS}
+    values["target_energy"] = energy
+    for name, value in values.items():
+        if value is not None and not 0.0 <= value <= 1.0:
+            raise ValueError(f"{name} must be between 0 and 1, got {value}")
+    tempo = user_prefs.get("target_tempo")
+    if tempo is not None and not TEMPO_RANGE[0] <= tempo <= TEMPO_RANGE[1]:
+        raise ValueError(f"target_tempo must be between {TEMPO_RANGE[0]:g} and {TEMPO_RANGE[1]:g} BPM, got {tempo}")
+
+
 def label_match(target: Optional[str], value: str, families: List[set]) -> str:
-    """Returns "exact", "near" (same family), or "none"."""
-    if target is None:
+    """Returns "exact", "near" (same family), or "none". Case and edge spaces are ignored."""
+    target, value = normalize_label(target), normalize_label(value)
+    if target is None or value is None:
         return "none"
     if value == target:
         return "exact"
@@ -95,6 +127,7 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     The short names genre, mood, energy are also accepted.
     Returns (score between 0 and 1, list of reasons).
     """
+    validate_prefs(user_prefs)
     reasons: List[str] = []
     score = 0.0
 
@@ -166,22 +199,72 @@ def profile_coverage(user_prefs: Dict, songs: List[Dict]) -> int:
     )
 
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
+def confidence_warnings(user_prefs: Dict, songs: List[Dict], results: List[Tuple[Dict, float, str]]) -> List[str]:
+    """
+    Plain-language caveats for a result list: no genre/mood coverage, a weak best score,
+    or a top pick that does not match the requested mood.
+    """
+    warnings: List[str] = []
+    if not results:
+        return warnings
+    if profile_coverage(user_prefs, songs) == 0:
+        warnings.append("no song in the catalog matches this genre or mood; ranking uses audio numbers only")
+    if results[0][1] < LOW_CONFIDENCE_SCORE:
+        warnings.append(f"best score is only {results[0][1]:.2f}; nothing fits this profile well")
+    mood = user_prefs.get("favorite_mood", user_prefs.get("mood"))
+    top_song = results[0][0]
+    if normalize_label(mood) and label_match(mood, top_song["mood"], MOOD_FAMILIES) == "none":
+        warnings.append(f"the top pick ({top_song['title']}) does not match the mood '{mood}'")
+    return warnings
+
+
+def recommend_songs(
+    user_prefs: Dict,
+    songs: List[Dict],
+    k: int = 5,
+    max_per_genre: Optional[int] = None,
+    max_per_artist: Optional[int] = None,
+) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.
     Required by src/main.py
-    Returns the top k as (song_dict, score, explanation), best first.
+    Returns the top k as (song_dict, score, explanation), best first. Optional diversity
+    caps keep at most max_per_genre songs of one genre and max_per_artist by one artist;
+    skipped songs only backfill if fewer than k songs fit under the caps.
     """
     if k < 0:
         raise ValueError("k must be non-negative")
+    if any(cap is not None and cap < 1 for cap in (max_per_genre, max_per_artist)):
+        raise ValueError("diversity caps must be at least 1")
     scored = (
         (song, score, "; ".join(reasons))
         for song in songs
         for score, reasons in [score_song(user_prefs, song)]
     )
     # Best score first; equal scores fall back to title so order is reproducible.
-    ranked = sorted(scored, key=lambda item: (-item[1], item[0]["title"]))
-    return ranked[:k]
+    order = lambda item: (-item[1], item[0]["title"])
+    ranked = sorted(scored, key=order)
+    if max_per_genre is None and max_per_artist is None:
+        return ranked[:k]
+
+    picked, skipped = [], []
+    genre_counts: Counter = Counter()
+    artist_counts: Counter = Counter()
+    for item in ranked:
+        if len(picked) == k:
+            break
+        genre = normalize_label(item[0]["genre"])
+        artist = normalize_label(item[0]["artist"])
+        if (max_per_genre is not None and genre_counts[genre] >= max_per_genre) or (
+            max_per_artist is not None and artist_counts[artist] >= max_per_artist
+        ):
+            skipped.append(item)
+            continue
+        picked.append(item)
+        genre_counts[genre] += 1
+        artist_counts[artist] += 1
+    picked += skipped[: k - len(picked)]
+    return sorted(picked, key=order)
 
 
 def load_songs(csv_path: str) -> List[Dict]:

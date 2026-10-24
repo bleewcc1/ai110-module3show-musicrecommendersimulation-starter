@@ -19,3 +19,23 @@ id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
 18,Pine Smoke Lullaby,Wren and Moss,folk,melancholy,0.30,82,0.35,0.40,0.91
 19,Blue Monday Rain,Delta Smoke,blues,sorrowful,0.44,70,0.30,0.50,0.67
 20,Calle Sol,Los Faroles,latin,festive,0.86,104,0.92,0.91,0.28
+21,Thunder Alley,Rust Valley,rock,intense,0.89,148,0.52,0.60,0.12
+22,Broken Amplifier,Static Youth,rock,aggressive,0.94,160,0.40,0.55,0.08
+23,Highway Daydream,Desert Static,rock,happy,0.72,126,0.74,0.62,0.30
+24,Last Call Lullaby,Amber Lane,rock,melancholy,0.45,88,0.33,0.42,0.55
+25,Forged in Ash,Grave Anthem,metal,intense,0.96,172,0.25,0.40,0.05
+26,Velvet Static,Glass Harbor,pop,romantic,0.60,100,0.70,0.74,0.25
+27,Paper Hearts,Luna Fray,pop,melancholy,0.50,92,0.38,0.60,0.45
+28,Dancefloor Mirage,Neon Echo,pop,euphoric,0.90,126,0.86,0.89,0.08
+29,Rainy Window Tape,LoRoom,lofi,melancholy,0.32,70,0.42,0.55,0.80
+30,Study Hall Static,Paper Lanterns,lofi,focused,0.38,76,0.55,0.57,0.74
+31,Sleepy Vinyl,Slow Stereo,lofi,relaxed,0.30,68,0.58,0.52,0.83
+32,Midnight Blue Room,Satin Rae,jazz,moody,0.40,96,0.50,0.50,0.85
+33,Cathedral of Rain,Elara Voss,classical,melancholy,0.22,58,0.28,0.25,0.96
+34,Gravel Road Anthem,Hank Willow,country,happy,0.66,112,0.80,0.68,0.60
+35,Bass Cathedral,Circuit Bloom,edm,intense,0.97,140,0.62,0.82,0.02
+36,Chrome Skyline,Neon Echo,synthwave,nostalgic,0.68,104,0.55,0.70,0.20
+37,Block Party Sunday,Block Theory,hip hop,happy,0.82,98,0.85,0.90,0.15
+38,Sunset Dub,Sun Dial,reggae,relaxed,0.45,80,0.78,0.72,0.55
+39,Morning Porch Song,Wren and Moss,folk,peaceful,0.28,84,0.62,0.45,0.93
+40,Smoke and Whiskey,Delta Smoke,blues,melancholy,0.50,76,0.35,0.52,0.60
