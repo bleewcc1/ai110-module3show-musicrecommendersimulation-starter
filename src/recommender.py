@@ -143,7 +143,7 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
         if target is not None:
             points = WEIGHTS[key] * closeness(target, song[column], sigma)
             score += points
-            reasons.append(f"{key} {song[column]} vs target {target} +{points:.2f}")
+            reasons.append(f"{key} {song[column]:g} vs target {target:g} +{points:.2f}")
 
     if genre_match == "none" and mood_match == "none":
         score *= NO_MATCH_PENALTY
@@ -172,13 +172,16 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
     Required by src/main.py
     Returns the top k as (song_dict, score, explanation), best first.
     """
-    scored = []
-    for song in songs:
-        score, reasons = score_song(user_prefs, song)
-        scored.append((song, score, "; ".join(reasons)))
+    if k < 0:
+        raise ValueError("k must be non-negative")
+    scored = (
+        (song, score, "; ".join(reasons))
+        for song in songs
+        for score, reasons in [score_song(user_prefs, song)]
+    )
     # Best score first; equal scores fall back to title so order is reproducible.
-    scored.sort(key=lambda item: (-item[1], item[0]["title"]))
-    return scored[:k]
+    ranked = sorted(scored, key=lambda item: (-item[1], item[0]["title"]))
+    return ranked[:k]
 
 
 def load_songs(csv_path: str) -> List[Dict]:
@@ -186,8 +189,8 @@ def load_songs(csv_path: str) -> List[Dict]:
     Loads songs from a CSV file, converting numeric columns.
     Required by src/main.py
     """
-    int_fields = ("id", "tempo_bpm")
-    float_fields = ("energy", "valence", "danceability", "acousticness")
+    int_fields = ("id",)
+    float_fields = ("tempo_bpm", "energy", "valence", "danceability", "acousticness")
     songs = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -205,10 +208,12 @@ class Recommender:
     Required by tests/test_recommender.py
     """
     def __init__(self, songs: List[Song]):
+        """Stores the song catalog to recommend from."""
         self.songs = songs
 
     @staticmethod
     def _prefs(user: UserProfile) -> Dict:
+        """Converts a UserProfile into the preference dict that score_song expects."""
         return {
             "favorite_genre": user.favorite_genre,
             "favorite_mood": user.favorite_mood,
@@ -220,6 +225,7 @@ class Recommender:
         }
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
+        """Returns the top k songs for the user, best score first (ties by title)."""
         prefs = self._prefs(user)
         ranked = sorted(
             self.songs,
@@ -228,5 +234,6 @@ class Recommender:
         return ranked[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
+        """Returns the song's score and the reasons behind it as one readable string."""
         score, reasons = score_song(self._prefs(user), asdict(song))
         return f"Score {score:.2f}: " + "; ".join(reasons)

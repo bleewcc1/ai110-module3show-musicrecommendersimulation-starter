@@ -14,7 +14,7 @@ from src.recommender import (
 def make_song(**overrides):
     song = {
         "id": 1, "title": "T", "artist": "A", "genre": "pop", "mood": "happy",
-        "energy": 0.8, "tempo_bpm": 120, "valence": 0.7,
+        "energy": 0.8, "tempo_bpm": 120.0, "valence": 0.7,
         "danceability": 0.7, "acousticness": 0.2,
     }
     song.update(overrides)
@@ -113,9 +113,12 @@ def test_recommend_songs_sorted_and_limited():
 def test_load_songs_converts_types():
     songs = load_songs("data/songs.csv")
     assert len(songs) == 20
-    assert isinstance(songs[0]["id"], int)
-    assert isinstance(songs[0]["tempo_bpm"], int)
-    assert isinstance(songs[0]["energy"], float)
+    for song in songs:
+        assert isinstance(song["id"], int)
+        for field in ("title", "artist", "genre", "mood"):
+            assert isinstance(song[field], str)
+        for field in ("tempo_bpm", "energy", "valence", "danceability", "acousticness"):
+            assert isinstance(song[field], float), field
 
 
 def test_low_energy_user_gets_low_energy_top_pick():
@@ -174,11 +177,37 @@ def test_unrelated_song_is_labelled_closest_fit_only():
 
 
 def test_optional_tempo_breaks_a_tie():
-    prefs = {"favorite_genre": "rock", "favorite_mood": "intense", "target_energy": 0.9, "target_tempo": 155}
-    a = score_song(prefs, make_song(genre="pop", mood="happy", energy=0.9, tempo_bpm=150))[0]
-    b = score_song(prefs, make_song(genre="pop", mood="happy", energy=0.9, tempo_bpm=90))[0]
+    prefs = {"favorite_genre": "rock", "favorite_mood": "intense", "target_energy": 0.9, "target_tempo": 155.0}
+    a = score_song(prefs, make_song(genre="pop", mood="happy", energy=0.9, tempo_bpm=150.0))[0]
+    b = score_song(prefs, make_song(genre="pop", mood="happy", energy=0.9, tempo_bpm=90.0))[0]
     assert a > b
 
 
 def test_weights_sum_to_one():
     assert math.isclose(sum(WEIGHTS.values()), 1.0)
+
+
+# recommend_songs() edge cases -------------------------------------------
+
+import pytest
+
+
+def test_k_larger_than_catalog_returns_every_song():
+    songs = [make_song(id=i, title=f"S{i}") for i in range(3)]
+    prefs = {"favorite_genre": "pop", "favorite_mood": "happy", "target_energy": 0.8}
+    assert len(recommend_songs(prefs, songs, k=10)) == 3
+
+
+def test_k_zero_returns_nothing():
+    prefs = {"favorite_genre": "pop", "favorite_mood": "happy", "target_energy": 0.8}
+    assert recommend_songs(prefs, [make_song()], k=0) == []
+
+
+def test_negative_k_is_rejected():
+    prefs = {"favorite_genre": "pop", "favorite_mood": "happy", "target_energy": 0.8}
+    with pytest.raises(ValueError):
+        recommend_songs(prefs, [make_song()], k=-1)
+
+
+def test_empty_catalog_returns_nothing():
+    assert recommend_songs({"favorite_genre": "pop"}, [], k=5) == []

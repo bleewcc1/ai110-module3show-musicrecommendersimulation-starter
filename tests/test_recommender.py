@@ -59,3 +59,37 @@ def test_explain_recommendation_returns_non_empty_string():
     explanation = rec.explain_recommendation(user, song)
     assert isinstance(explanation, str)
     assert explanation.strip() != ""
+
+
+# Recommender with optional tempo / valence / danceability targets ------------
+
+def make_tempo_recommender():
+    def song(id, title, tempo):
+        return Song(id=id, title=title, artist="A", genre="pop", mood="happy", energy=0.8,
+                    tempo_bpm=tempo, valence=0.7, danceability=0.7, acousticness=0.2)
+    return Recommender([song(1, "Slow", 70.0), song(2, "Fast", 160.0)])
+
+
+def test_recommender_uses_target_tempo():
+    rec = make_tempo_recommender()
+    fast_fan = UserProfile("pop", "happy", 0.8, False, target_tempo=160.0)
+    slow_fan = UserProfile("pop", "happy", 0.8, False, target_tempo=70.0)
+    assert rec.recommend(fast_fan, k=1)[0].title == "Fast"
+    assert rec.recommend(slow_fan, k=1)[0].title == "Slow"
+
+
+def test_recommender_respects_k():
+    rec = make_tempo_recommender()
+    user = UserProfile("pop", "happy", 0.8, False)
+    assert len(rec.recommend(user, k=1)) == 1
+    assert len(rec.recommend(user, k=5)) == 2
+
+
+def test_explanation_mentions_optional_targets_only_when_set():
+    rec = make_tempo_recommender()
+    song = rec.songs[0]
+    with_target = rec.explain_recommendation(
+        UserProfile("pop", "happy", 0.8, False, target_tempo=70.0, target_valence=0.7), song)
+    without = rec.explain_recommendation(UserProfile("pop", "happy", 0.8, False), song)
+    assert "tempo" in with_target and "valence" in with_target
+    assert "tempo" not in without and "valence" not in without

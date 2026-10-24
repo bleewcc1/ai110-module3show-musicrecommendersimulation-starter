@@ -21,16 +21,30 @@ Prompts:
 
 ## 3. How the Model Works  
 
-Explain your scoring approach in simple language.  
+Think of the recommender as a judge at a talent show who has a short checklist and gives every song a mark out of 100. It judges each song in the catalog one at a time, writes down why it gave each mark, and then hands you the five songs with the highest marks.
 
-Prompts:  
+**What it knows about a song.** Each song has a genre (like lofi or rock), a mood (like chill or intense), and a few numbers describing how it sounds: how energetic it is, how acoustic it is, how fast it is, how happy it sounds, and how danceable it is.
 
-- What features of each song are used (genre, energy, mood, etc.)  
-- What user preferences are considered  
-- How does the model turn those into a score  
-- What changes did you make from the starter logic  
+**What it knows about you.** You tell it your favorite genre, your favorite mood, how energetic you want the music to feel, and whether you like acoustic sounds. You can also give it a target speed, happiness and danceability, but those are optional.
 
-Avoid code here. Pretend you are explaining the idea to a friend who does not program.
+**How a song earns its mark.** The judge hands out points for each thing on the checklist. (The app shows points as decimals, so 28 points appears as +0.28 and a perfect song scores close to 1.00.)
+
+- **Genre (up to 28 points).** A song gets the full points if it is your favorite genre. If it is a close cousin, like indie pop for a pop fan, it gets half.
+- **Mood (up to 22 points).** The same idea: full points for your favorite mood, half for a similar one (relaxed counts as similar to chill).
+- **Energy (up to 28 points).** Here the judge asks "how close is this song to the energy you wanted?", not "is it high or low?". A song right on your target gets all the points, and the points shrink the further away it is in either direction. That way a calm listener is not handed a loud song just because loud songs have "more" energy.
+- **Acoustic feel (up to 12 points).** If you like acoustic music, the more acoustic the song, the more points. If you don't, it works the other way around.
+- **Speed, happiness and danceability (up to 10 points together).** Only used if you gave targets, and they work like energy: closer to your target means more points. They are small, so mostly they break ties between songs that are otherwise equal.
+
+**One penalty.** If a song matches neither your genre nor your mood, not even as a close cousin, its total is cut in half. A song that merely happens to have the right energy should not beat a song that really fits your taste. These songs are labeled "closest fit only" so you can see they are filler.
+
+**Picking the winners.** After every song has a mark, the judge lines them up from highest to lowest and shows the top five. If two songs tie, they are listed alphabetically so the result is the same every time. Each song comes with its list of reasons, such as "genre match, +0.28", so you can see exactly why it ranked where it did.
+
+**What I changed from the starter logic.** The starter only gave a song points for an exact genre or mood match, and nothing otherwise. I made four changes:
+
+1. Energy is scored by closeness to your target, not by "more is better".
+2. Close-cousin genres and moods earn half credit instead of zero, so a jazz "relaxed" song can still reach a "chill lofi" listener.
+3. Songs that match neither genre nor mood are halved.
+4. Speed, happiness and danceability can be used as small tie-breakers, and the app warns you when your taste is so narrow that fewer than five songs in the catalog really fit it.
 
 ---
 

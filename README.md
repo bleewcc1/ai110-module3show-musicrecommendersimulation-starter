@@ -205,15 +205,162 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
+This is the terminal output of `python -m src.main`, which runs three profiles against the 20-song catalog and shows the top 5 for each with their scores and reasons:
 
 ```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+================================================================
+  Chill Lofi: lofi / chill / energy 0.40 / acoustic
+================================================================
+
+1. Library Rain  (by Paper Lanterns)
+   Score 0.98  [####################]
+   Why:
+     - genre match (lofi) +0.28
+     - mood match (chill) +0.22
+     - energy 0.35 vs target 0.40 +0.27
+     - acoustic fit +0.10
+     - tempo 72 vs target 78 +0.04
+     - valence 0.6 vs target 0.58 +0.03
+     - danceability 0.58 vs target 0.6 +0.03
+
+2. Midnight Coding  (by LoRoom)
+   Score 0.96  [###################.]
+   Why:
+     - genre match (lofi) +0.28
+     - mood match (chill) +0.22
+     - energy 0.42 vs target 0.40 +0.28
+     - acoustic fit +0.09
+     - tempo 78 vs target 78 +0.04
+     - valence 0.56 vs target 0.58 +0.03
+     - danceability 0.62 vs target 0.6 +0.03
+
+3. Focus Flow  (by LoRoom)
+   Score 0.86  [#################...]
+   Why:
+     - genre match (lofi) +0.28
+     - related mood (focused ~ chill) +0.11
+     - energy 0.40 vs target 0.40 +0.28
+     - acoustic fit +0.09
+     - tempo 80 vs target 78 +0.04
+     - valence 0.59 vs target 0.58 +0.03
+     - danceability 0.6 vs target 0.6 +0.03
+
+4. Spacewalk Thoughts  (by Orbit Bloom)
+   Score 0.80  [################....]
+   Why:
+     - related genre (ambient ~ lofi) +0.14
+     - mood match (chill) +0.22
+     - energy 0.28 vs target 0.40 +0.25
+     - acoustic fit +0.11
+     - tempo 60 vs target 78 +0.03
+     - valence 0.65 vs target 0.58 +0.03
+     - danceability 0.41 vs target 0.6 +0.02
+
+5. Coffee Shop Stories  (by Slow Stereo)
+   Score 0.73  [###############.....]
+   Why:
+     - related genre (jazz ~ lofi) +0.14
+     - related mood (relaxed ~ chill) +0.11
+     - energy 0.37 vs target 0.40 +0.28
+     - acoustic fit +0.11
+     - tempo 90 vs target 78 +0.04
+     - valence 0.71 vs target 0.58 +0.03
+     - danceability 0.54 vs target 0.6 +0.03
+
+
+================================================================
+  Intense Rock: rock / intense / energy 0.92 / not acoustic
+================================================================
+! Profile may be too narrow: only 3 songs match genre or mood (fewer than the 5 requested).
+
+1. Storm Runner  (by Voltline)
+   Score 0.99  [####################]
+   Why:
+     - genre match (rock) +0.28
+     - mood match (intense) +0.22
+     - energy 0.91 vs target 0.92 +0.28
+     - acoustic fit +0.11
+     - tempo 152 vs target 155 +0.04
+     - valence 0.48 vs target 0.45 +0.03
+     - danceability 0.66 vs target 0.65 +0.03
+
+2. Iron Cathedral  (by Black Ember)
+   Score 0.72  [##############......]
+   Why:
+     - related genre (metal ~ rock) +0.14
+     - related mood (aggressive ~ intense) +0.11
+     - energy 0.97 vs target 0.92 +0.27
+     - acoustic fit +0.12
+     - tempo 168 vs target 155 +0.03
+     - valence 0.28 vs target 0.45 +0.02
+     - danceability 0.45 vs target 0.65 +0.02
+
+3. Gym Hero  (by Max Pulse)
+   Score 0.67  [#############.......]
+   Why:
+     - mood match (intense) +0.22
+     - energy 0.93 vs target 0.92 +0.28
+     - acoustic fit +0.11
+     - tempo 132 vs target 155 +0.03
+     - valence 0.77 vs target 0.45 +0.01
+     - danceability 0.88 vs target 0.65 +0.02
+
+4. Neon Pulse  (by Circuit Bloom)
+   Score 0.22  [####................]
+   Why:
+     - energy 0.94 vs target 0.92 +0.28
+     - acoustic fit +0.12
+     - tempo 128 vs target 155 +0.02
+     - valence 0.88 vs target 0.45 +0.01
+     - danceability 0.9 vs target 0.65 +0.02
+     - closest fit only: no genre or mood match, score x0.5
+
+5. Sunrise City  (by Neon Echo)
+   Score 0.20  [####................]
+   Why:
+     - energy 0.82 vs target 0.92 +0.26
+     - acoustic fit +0.10
+     - tempo 118 vs target 155 +0.01
+     - valence 0.84 vs target 0.45 +0.01
+     - danceability 0.79 vs target 0.65 +0.03
+     - closest fit only: no genre or mood match, score x0.5
+
+
+================================================================
+  Pop Happy: pop / happy / energy 0.80
+================================================================
+
+1. Sunrise City  (by Neon Echo)
+   Score 0.78  [################....]
+   Why:
+     - genre match (pop) +0.28
+     - mood match (happy) +0.22
+     - energy 0.82 vs target 0.80 +0.28
+
+2. Rooftop Lights  (by Indigo Parade)
+   Score 0.64  [#############.......]
+   Why:
+     - related genre (indie pop ~ pop) +0.14
+     - mood match (happy) +0.22
+     - energy 0.76 vs target 0.80 +0.28
+
+3. Gym Hero  (by Max Pulse)
+   Score 0.52  [##########..........]
+   Why:
+     - genre match (pop) +0.28
+     - energy 0.93 vs target 0.80 +0.24
+
+4. Calle Sol  (by Los Faroles)
+   Score 0.38  [########............]
+   Why:
+     - related mood (festive ~ happy) +0.11
+     - energy 0.86 vs target 0.80 +0.27
+
+5. Neon Pulse  (by Circuit Bloom)
+   Score 0.35  [#######.............]
+   Why:
+     - related mood (euphoric ~ happy) +0.11
+     - energy 0.94 vs target 0.80 +0.24
 ```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->

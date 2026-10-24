@@ -4,7 +4,7 @@ import sys
 # main.py imports `recommender` as a top-level module, so put src/ on the path.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from main import INTENSE_ROCK_PROFILE, TASTE_PROFILE
+from main import INTENSE_ROCK_PROFILE, POP_HAPPY_PROFILE, TASTE_PROFILE
 from recommender import load_songs, profile_coverage, recommend_songs, score_song
 
 CSV_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "songs.csv")
@@ -70,3 +70,15 @@ def test_profile_coverage_flags_narrow_profile():
     narrow = {"favorite_genre": "no-such-genre", "favorite_mood": "no-such-mood", "target_energy": 0.5}
     assert profile_coverage(narrow, songs) == 0
     assert profile_coverage(TASTE_PROFILE, songs) > profile_coverage(INTENSE_ROCK_PROFILE, songs)
+
+
+def test_pop_happy_top_pick_is_the_only_exact_match():
+    ranked = recommend_songs(POP_HAPPY_PROFILE, load_songs(CSV_PATH), k=2)
+    assert ranked[0][0]["title"] == "Sunrise City"
+    assert ranked[1][0]["genre"] == "indie pop" and ranked[1][0]["mood"] == "happy"
+
+
+def test_pop_happy_is_distinct_from_the_other_profiles():
+    pop = set(titles(POP_HAPPY_PROFILE, 2))
+    assert pop.isdisjoint(titles(TASTE_PROFILE, 2))
+    assert pop.isdisjoint(titles(INTENSE_ROCK_PROFILE, 2))
